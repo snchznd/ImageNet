@@ -173,7 +173,7 @@ def load_images_paths(
 
     return images_list
 
-def main() -> Dict[str, List[ImageSample]]:
+def load_dataset() -> Dict[str, List[ImageSample]]:
     '''
     Creates and returns a dict containing the absolute paths to all the train
      and validation Images.
@@ -195,6 +195,3 @@ def main() -> Dict[str, List[ImageSample]]:
                                                 code_to_label)
 
     return dataset
-
-if __name__ == '__main__':
-    main()
