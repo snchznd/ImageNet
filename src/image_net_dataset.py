@@ -4,10 +4,24 @@ dataset and apply to them torchvision transforms.
 '''
 
 from typing import List, Callable, Optional
+import sys
+from concurrent.futures import ProcessPoolExecutor
 import torch
 from torch.utils.data import Dataset
 from torchvision.io import read_image
 from torchvision.transforms import v2
+from tqdm import tqdm
+
+def process_image(img):
+    img_shape = read_image(img.path).shape
+    img_nbr_channels = img_shape[0]
+    if img_nbr_channels == 1:
+        return 'bw', img
+    elif img_nbr_channels == 3:
+        return 'color', img
+    else:
+        print(f'ERROR: {img.path} has shape {img_shape}', file=sys.stderr)
+        return 'error', img
 
 class ImageNetDataset(Dataset):
     '''
@@ -32,6 +46,28 @@ class ImageNetDataset(Dataset):
             self.transforms = v2.Compose(transforms_list)
         else:
             self.transforms = None
+        self.initialize_labels_mapping()
+
+    def initialize_labels_mapping(self) -> None:
+        self.string_to_label_number = {}
+        acc = 0
+        for *_, label in tqdm(self.dataset):
+            if label not in self.string_to_label_number:
+                self.string_to_label_number[label] = acc
+                acc += 1
+
+    def filter_out_1D_images(self):
+
+        with ProcessPoolExecutor() as executor:
+            results = list(tqdm(executor.map(process_image, self.dataset)))
+
+        self.dataset_color = []
+        self.dataset_black_and_white = []
+        for result, img in results:
+            if result == 'color':
+                self.dataset_color.append(img)
+            elif result == 'bw':
+                self.dataset_black_and_white.append(img)
 
     def __len__(self) -> int :
         '''
@@ -54,8 +90,11 @@ class ImageNetDataset(Dataset):
             An image of the dataset, with the torchvision transforms
             applied to it.
         '''
-        path = self.dataset[index].path
+        sample = self.dataset[index]
+        path = sample.path
+        label = self.string_to_label_number[sample.full_label]
         img = read_image(path)
         if self.transforms:
             img = self.transforms(img)
-        return img
+
+        return img, label
