@@ -47,8 +47,10 @@ class ImageNetDataset(Dataset):
         else:
             self.transforms = None
         self.initialize_labels_mapping()
+        self.filter_out_1D_images()
 
     def initialize_labels_mapping(self) -> None:
+        print('creating string labels to number labels mapping...')
         self.string_to_label_number = {}
         acc = 0
         for *_, label in tqdm(self.dataset):
@@ -57,7 +59,7 @@ class ImageNetDataset(Dataset):
                 acc += 1
 
     def filter_out_1D_images(self):
-
+        print('separating 1D images and 2D images...')
         with ProcessPoolExecutor() as executor:
             results = list(tqdm(executor.map(process_image, self.dataset)))
 
@@ -77,7 +79,7 @@ class ImageNetDataset(Dataset):
             The length of the datset, which is equal to the length of 
             the list of images paths we have.
         '''
-        return len(self.dataset)
+        return len(self.dataset_color)
 
     def __getitem__(self, index) -> torch.Tensor:
         '''
@@ -90,7 +92,7 @@ class ImageNetDataset(Dataset):
             An image of the dataset, with the torchvision transforms
             applied to it.
         '''
-        sample = self.dataset[index]
+        sample = self.dataset_color[index]
         path = sample.path
         label = self.string_to_label_number[sample.full_label]
         img = read_image(path)
