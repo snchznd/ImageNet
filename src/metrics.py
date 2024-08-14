@@ -13,8 +13,8 @@ def compute_accuracy(model_output : torch.Tensor, gt : torch.Tensor) -> float:
         gt (torch.Tensor): of size (Bx1) and containing the gt class for each
             element of the batch.
         
-        Returns:
-            float: the accuracy.
+    Returns:
+        float: the accuracy.
 
     '''
     nbr_predictions = model_output.shape[0]
