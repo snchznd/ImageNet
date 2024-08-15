@@ -1,6 +1,7 @@
 '''This module implement the training loop for a torch model'''
 from src.evaluation import evaluate
 import torch
+from torch.utils.tensorboard import SummaryWriter
 from tqdm import tqdm
 
 def train(model,
@@ -26,6 +27,9 @@ def train(model,
     eval_accuracies = []
     eval_losses = []
     
+    writer = SummaryWriter(log_dir="runs")
+    acc = 0
+    idx = 0
     for epoch in range(epochs):
         print('\n' + f'epoch: {epoch}')
         model.train()
@@ -33,7 +37,6 @@ def train(model,
         epoch_eval_losses = []
        
         # training
-        acc = 0
         for samples, targets in tqdm(train_dataloader, colour='blue'):
             samples, targets = samples.to(device), targets.to(device)
 
@@ -44,11 +47,16 @@ def train(model,
             loss = criteria(predictions, targets)
             epoch_train_losses.append(loss.item())
 
+            #tensorboard logging
+            writer.add_scalar('Training Loss', loss.item(), global_step=idx)
+            #writer.flush()
+            idx += 1
+
             loss.backward()
 
             optimizer.step()
 
-            #if acc == 500:
+            #if acc >= 100:
             #    break
             #acc += 1
             
@@ -77,4 +85,5 @@ def train(model,
             print(f'  ---> eval accuracy: {eval_accuracy * 100:.2f}%')
             print(f'  ---> eval loss: {eval_loss:.2f}')
     
+    writer.close()
     return model, train_losses, eval_accuracies, eval_losses  #, batch_train_losses
