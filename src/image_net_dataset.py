@@ -20,7 +20,7 @@ def process_image(img):
     elif img_nbr_channels == 3:
         return 'color', img
     else:
-        print(f'ERROR: {img.path} has shape {img_shape}', file=sys.stderr)
+        #print(f'ERROR: {img.path} has shape {img_shape}', file=sys.stderr)
         return 'error', img
 
 class ImageNetDataset(Dataset):
