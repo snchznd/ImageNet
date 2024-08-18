@@ -1,4 +1,5 @@
 import math
+import torch
 
 def compute_conv_output_size(h_in, w_in, kernel_size, stride, padding, dilation):
     def numerator(dim_in, idx):
@@ -12,3 +13,17 @@ def compute_conv_output_size(h_in, w_in, kernel_size, stride, padding, dilation)
         expr = numerator(dim_in, idx) / denominator(idx) + 1
         out_dims[dim_name] = math.floor(expr)
     return out_dims
+
+
+def compute_model_nbr_params(model: torch.nn.Module) -> int:
+    '''
+    Computes the number of trainable parameters of a model and returns it.
+    
+    Args:
+        model (torch.nn.Module): The model for which to compute the number of parameters.
+
+    Returns:
+        int: The total number of trainable parameters in the model.
+    '''
+    nbr_params = sum(param.numel() for param in model.parameters() if param.requires_grad)
+    return nbr_params
