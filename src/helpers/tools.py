@@ -1,4 +1,6 @@
+from typing import Dict, Any
 import math
+import yaml
 import torch
 
 def compute_conv_output_size(h_in, w_in, kernel_size, stride, padding, dilation):
@@ -27,3 +29,13 @@ def compute_model_nbr_params(model: torch.nn.Module) -> int:
     '''
     nbr_params = sum(param.numel() for param in model.parameters() if param.requires_grad)
     return nbr_params
+
+
+def load_yaml_file(file_name : str) -> Dict[str, Any] :
+    with open(file=file_name, mode='r') as file:
+        try:
+            content = yaml.safe_load(file)
+            return content
+        except yaml.YAMLError as e:
+            print(f'Error loading yaml file {file_name}: {e}')
+            return {}
