@@ -85,10 +85,19 @@ def load_train_images_paths(
 
     for directory in tqdm(os.listdir(train_folder_path)) :
         directory_full_path = os.path.join(train_folder_path, directory)
+        ###### TODO remove this modifcation!
+        max_nbr_images = 10
+        nbr_images_loaded = 0
+        ######################################
         for image_name in os.listdir(directory_full_path):
             image_full_path = os.path.join(directory_full_path, image_name)
             image_sample = ImageSample(image_full_path, directory, mapping[directory])
             images_list.append(image_sample)
+            ###### TODO remove this modifcation!
+            nbr_images_loaded += 1
+            if nbr_images_loaded > max_nbr_images :
+                break
+            ######################################
     return images_list
 
 def load_validation_images_paths(

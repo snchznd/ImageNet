@@ -36,6 +36,8 @@ class CNNImageClassifier(torch.nn.Module):
         self.FF_layers = [elem
                           for in_dim, out_dim in in_out_dims_FF 
                           for elem in self.get_FF_block(in_dim, out_dim)]
+        
+        # adding final layer
         self.FF_layers.append(torch.nn.Linear(2048, 999))
 
         # decomposing the architecture into two Sequential objects

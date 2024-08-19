@@ -1,4 +1,4 @@
-from src.metrics import compute_accuracy
+from src.helpers.metrics import compute_accuracy
 import torch
 from tqdm import tqdm
 
