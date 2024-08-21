@@ -1,7 +1,10 @@
-from typing import Dict, Any
+import os
+from typing import Dict, Any, Tuple
 import math
 import yaml
 import torch
+
+DEFAULT_EXP_PATH = '/home/masn/projects/ImageNet/experiments'
 
 def compute_conv_output_size(h_in, w_in, kernel_size, stride, padding, dilation):
     def numerator(dim_in, idx):
@@ -39,3 +42,23 @@ def load_yaml_file(file_name : str) -> Dict[str, Any] :
         except yaml.YAMLError as e:
             print(f'Error loading yaml file {file_name}: {e}')
             return {}
+
+def initialize_experiment_directories(experiment_name : str
+                                      , experiments_dir_path : str = DEFAULT_EXP_PATH
+                                      ) -> Tuple[str, str]:
+    '''
+    Creates the directories necessary to log experiments and save models and
+    returns the paths to the directories created.
+
+    Args:
+        experiment_name (str): the name of the experiment
+        experiments_dir_path (str): the path to the "experiments" directory 
+
+    Returns:
+        tuple: the logging directory and the model saving directory 
+    '''
+    logs_dir_path = os.path.join(DEFAULT_EXP_PATH, experiment_name, 'logs')
+    models_dir_path = os.path.join(DEFAULT_EXP_PATH, experiment_name, 'models')
+    for path in logs_dir_path, models_dir_path:
+        os.makedirs(path)
+    return logs_dir_path, models_dir_path
