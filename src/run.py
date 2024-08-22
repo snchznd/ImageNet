@@ -37,10 +37,14 @@ def main() -> None:
     
     shutil.copy(YAML_FILE_PATH, os.path.join(model_save_dir, '..'))
 
-    # data loading
-    resize = v2.Resize(size=(2**8,) * 2)
-    convert_to_float = v2.ToDtype(torch.float32, scale=False)
-    transforms_list = [resize, convert_to_float]
+    transforms_list = [v2.Resize(size=(2**8,) * 2)]
+    if yaml_info['data_augmentation']:
+        transforms_list.append(v2.RandomHorizontalFlip(p=0.5))
+        transforms_list.append(v2.RandomPerspective(distortion_scale=0.5, p=0.2))
+        transforms_list.append(v2.RandomApply([v2.RandomRotation(degrees=(-90, 90))], p=0.4))
+        print('using data augmentation')
+    transforms_list.append(v2.ToDtype(torch.float32, scale=False))
+
     train_loader, val_loader = get_data_loaders(
         train_batch_size=yaml_info['batch_size']['train'],
         val_batch_size=yaml_info['batch_size']['val'],
