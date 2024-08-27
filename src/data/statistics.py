@@ -26,7 +26,7 @@ def update_var(previous_var: torch.Tensor, avg_tensor, new_value: torch.Tensor, 
     '''
     Updates the running variance with a new value.
     '''
-    squared_deviation = (new_value - avg_tensor) ** 2
+    squared_deviation = torch.square(new_value - avg_tensor)
     new_var = previous_var + (squared_deviation - previous_var) / iteration_number
     return new_var
 
@@ -107,4 +107,5 @@ def get_std_tensors(path='/home/masn/projects/ImageNet/stats'):
 
 
 if __name__ == '__main__':
-    get_average_tensors()
+    #get_average_tensors()
+    get_std_tensors()

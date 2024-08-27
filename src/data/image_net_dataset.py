@@ -3,9 +3,11 @@ Module that implements a class to load dynamically images from the ImageNet
 dataset and apply to them torchvision transforms.
 '''
 
+#from src.data.statistics import get_average_tensors, get_std_tensors
 from typing import List, Callable, Optional
-import sys
 from concurrent.futures import ProcessPoolExecutor
+import sys
+import os
 import torch
 from torch.utils.data import Dataset
 from torchvision.io import read_image
@@ -30,7 +32,9 @@ class ImageNetDataset(Dataset):
     def __init__(
             self,
             image_paths : List[str],
-            transforms_list : Optional[List[Callable]] = None
+            transforms_list : Optional[List[Callable]] = None,
+            path : str = '/home/masn/projects/ImageNet/stats',
+            split : str = None
             ) -> None:
         '''
         Initializes the dataset.
@@ -42,11 +46,14 @@ class ImageNetDataset(Dataset):
                 transforms to apply to the image.
         '''
         self.dataset = image_paths
+        self.path = path
+        self.split = split
         if transforms_list:
             self.transforms = v2.Compose(transforms_list)
         else:
             self.transforms = None
         self.initialize_labels_mapping()
+        self.load_avg_and_std_tensors()
         self.filter_out_1D_images()
 
     def initialize_labels_mapping(self) -> None:
@@ -70,6 +77,23 @@ class ImageNetDataset(Dataset):
                 self.dataset_color.append(img)
             elif result == 'bw':
                 self.dataset_black_and_white.append(img)
+
+    def load_avg_and_std_tensors(self):
+        paths = [os.path.join(self.path, x) 
+                    for x in ['avg_train', 'avg_val', 'std_train', 'std_val']]
+        if not all([os.path.exists(path) for path in paths]):
+            raise FileNotFoundError('You need to compute the avg and std'  
+                                    'tensors of the train and val splits.')
+            #print('Average and std tensors not found. Computing them now.',
+            #      file=sys.stderr)
+            #get_average_tensors()
+            #get_std_tensors()
+
+        self.avg_train = torch.load(paths[0]).squeeze()
+        self.avg_val = torch.load(paths[1]).squeeze()
+        self.std_train = torch.load(paths[2]).squeeze()
+        self.std_val = torch.load(paths[3]).squeeze()
+
 
     def __len__(self) -> int :
         '''
@@ -98,5 +122,9 @@ class ImageNetDataset(Dataset):
         img = read_image(path)
         if self.transforms:
             img = self.transforms(img)
+        if self.split == 'train':
+            img = (img - self.avg_train) / self.std_train
+        elif self.split == 'val':
+            img = (img - self.avg_val) / self.std_val
 
         return img, label

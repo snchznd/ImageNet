@@ -14,8 +14,8 @@ def get_data_loaders(train_batch_size,
     # ADDED BOUND ON SAMPLES USED FOR DEV PURPOSES -- REMOVE THIS!
     #train_dataset = ImageNetDataset(data_splits['train'][:10_000], train_transforms)
     #val_dataset = ImageNetDataset(data_splits['val'][:10_000], val_transforms)
-    train_dataset = ImageNetDataset(data_splits['train'], train_transforms)
-    val_dataset = ImageNetDataset(data_splits['val'], val_transforms)
+    train_dataset = ImageNetDataset(data_splits['train'], train_transforms, split='train')
+    val_dataset = ImageNetDataset(data_splits['val'], val_transforms, split='val')
     train_data_loader = DataLoader(dataset=train_dataset,
                                    batch_size=train_batch_size,
                                    shuffle=shuffle_train,
