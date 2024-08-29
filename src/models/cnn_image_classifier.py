@@ -1,3 +1,4 @@
+from src.models.blocks import get_conv_block, get_FF_block
 from collections import namedtuple
 import torch.nn
 import torch.nn.functional as F
@@ -21,82 +22,31 @@ class CNNImageClassifier(torch.nn.Module):
         }
 
         # building convolutional layers
-        in_out_channels_dims = [(3, 48), (48, 128), (128, 192), (192, 192), (192, 128)]
+        #in_out_channels_dims = [(3, 48), (48, 128), (128, 192), (192, 192), (192, 128)]
+        #in_out_channels_dims = [(3, 64), (64, 256), (256, 256), (256, 256), (256, 256)] # best for overfitting so far
+        in_out_channels_dims = [(3, 10), (10, 10), (10, 10), (10, 10), (10, 10)]
         self.conv_layers = [
                             elem 
                             for (in_dim, out_dim) in in_out_channels_dims
                             for elem in 
-                            self.get_conv_block(nbr_input_channels=in_dim,
+                            get_conv_block(nbr_input_channels=in_dim,
                                                 nbr_output_channels=out_dim,
                                                 **conv_layers_kwargs)
                             ]
 
         # building FF layers
-        in_out_dims_FF = [(8 * 8 * 128, 2048), (2048, 2048)]
+        #in_out_dims_FF = [(8 * 8 * 256, 2048), (2048, 2048), (2048, 2048)]
+        in_out_dims_FF = [(8 * 8 * 10, 256), (256, 256), (256, 256)]
         self.FF_layers = [elem
                           for in_dim, out_dim in in_out_dims_FF 
-                          for elem in self.get_FF_block(in_dim, out_dim)]
+                          for elem in get_FF_block(in_dim, out_dim)]
         
         # adding final layer
-        self.FF_layers.append(torch.nn.Linear(2048, 999))
+        self.FF_layers.append(torch.nn.Linear(256, 999))
 
         # decomposing the architecture into two Sequential objects
         self.convolutions = torch.nn.Sequential(*self.conv_layers)
         self.FF = torch.nn.Sequential(*self.FF_layers)
-
-    def get_FF_block(self,
-                     input_dim,
-                     output_dim,
-                     dropout_probability=None):
-        layers = [
-            torch.nn.Linear(in_features=input_dim,
-                            out_features=output_dim),
-            torch.nn.BatchNorm1d(num_features=output_dim),
-            torch.nn.ReLU(),
-                ]
-        if dropout_probability:
-            layers.append(torch.nn.Dropout(p=dropout_probability))
-
-        return layers
-        
-
-    def get_conv_block(self,
-                       nbr_input_channels,
-                       nbr_output_channels,
-                       kernel_size,
-                       stride,
-                       padding,
-                       dilation,
-                       bias,
-                       use_max_pool,
-                       max_pool_kernel_size,
-                       max_pool_stride,
-                       use_dropout,
-                       use_batch_norm,
-                       dropout_probability=0.5):
-        block = []
-        convolution = torch.nn.Conv2d(in_channels=nbr_input_channels,
-                                      out_channels=nbr_output_channels,
-                                      kernel_size=kernel_size,
-                                      stride=stride,
-                                      padding=padding,
-                                      dilation=dilation,
-                                      bias=bias)
-        block.append(convolution)
-
-        if use_batch_norm:
-            block.append(torch.nn.BatchNorm2d(num_features=nbr_output_channels))
-
-        block.append(torch.nn.ReLU())
-
-        if use_dropout:
-            block.append(torch.nn.Dropout(p=dropout_probability))
-
-        if use_max_pool:
-            block.append(torch.nn.MaxPool2d(kernel_size=max_pool_kernel_size,
-                                        stride=max_pool_stride))
-
-        return block
 
     def forward(self, x):
         batch_size = x.shape[0]
