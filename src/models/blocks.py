@@ -2,6 +2,7 @@ import torch
 
 class FFResidualLayer(torch.nn.Module):
     def __init__(self, dim, dropout_probability=None):
+        super().__init__()
         self.input_dim = dim
         self.output_dim = dim
         self.dropout_probability = dropout_probability
