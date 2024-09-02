@@ -9,6 +9,7 @@ from src.data.data_loading import load_dataset
 from src.data.data_processing import get_data_loaders
 from src.data.image_net_dataset import ImageNetDataset
 from src.models.cnn_image_classifier import CNNImageClassifier
+from src.models.residual_cnn import ResidualCNN
 from src.helpers.tools import (compute_conv_output_size,
                                compute_model_nbr_params,
                                load_yaml_file,
@@ -37,6 +38,36 @@ def main() -> None:
     
     shutil.copy(YAML_FILE_PATH, os.path.join(model_save_dir, '..'))
 
+    # model definition
+    if yaml_info['model']['architecture'] == 'CNNImageClassifier' :
+        model = CNNImageClassifier(dropout_probability=yaml_info['model']['dropout_probability'])
+
+    elif yaml_info['model']['architecture'] == 'ResidualCNN' :
+        model = ResidualCNN(
+            nbr_residual_layers=yaml_info['model']['nbr_residual_layers'],
+            residual_layers_dim=yaml_info['model']['residual_layers_dim'],
+            nbr_conv_layers=yaml_info['model']['nbr_conv_layers'],
+            conv_layers_nbr_channels=yaml_info['model']['conv_layers_nbr_channels'],
+            conv_layers_kernel_size=eval(yaml_info['model']['conv_layers_kernel_size']),
+            conv_layers_stride=eval(yaml_info['model']['conv_layers_stride']),
+            conv_layers_padding=eval(yaml_info['model']['conv_layers_padding']),
+            conv_layers_dilation=eval(yaml_info['model']['conv_layers_dilation']),
+            conv_layers_use_bias=yaml_info['model']['conv_layers_use_bias'],
+            conv_layers_use_max_pool=yaml_info['model']['conv_layers_use_max_pool'],
+            conv_layers_max_pool_kernel_size=eval(yaml_info['model']['conv_layers_max_pool_kernel_size']),
+            conv_layers_max_pool_stride=eval(yaml_info['model']['conv_layers_max_pool_stride']),
+            use_batch_norm=yaml_info['model']['use_batch_norm'],
+            use_dropout=yaml_info['model']['use_dropout'],
+            dropout_probability=yaml_info['model']['dropout_probability'],
+            input_image_width=yaml_info['model']['input_image_width'],
+            input_image_height=yaml_info['model']['input_image_height'],
+            input_image_nbr_channels=yaml_info['model']['input_image_nbr_channels'],
+            nbr_output_classes=yaml_info['model']['nbr_output_classes']
+        )
+    print(f'\nmodel architecture: {yaml_info["model"]["architecture"]}')
+
+    print(f'\nmodel number of parameters: {compute_model_nbr_params(model):,}')
+
     transforms_list = [v2.Resize(size=(2**8,) * 2)]
     if yaml_info['data_augmentation']:
         transforms_list.append(v2.RandomHorizontalFlip(p=0.5))
@@ -51,12 +82,8 @@ def main() -> None:
         shuffle_train=True,
         shuffle_val=False,
         train_transforms=transforms_list,
-        val_transforms=transforms_list
+        val_transforms=[transforms_list[0], transforms_list[-1]]
         )
-
-    # model definition
-    model = CNNImageClassifier(dropout_probability=0.5)
-    print(f'\nmodel number of parameters: {compute_model_nbr_params(model):,}')
 
     # training parameters
     optimizer = torch.optim.Adam(model.parameters(),
